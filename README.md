@@ -9,6 +9,7 @@ Tecnologias: Python 3.14, PyPDF2, Tkinter.
 Creditos: Creado por www.fierroduque.com.
 
 
+
 Como funciona?
 La aplicacion utiliza la libreria PyPDF2 para procesar los documentos de manera eficiente:
 
