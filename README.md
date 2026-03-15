@@ -7,6 +7,7 @@ Esta es una herramienta robusta y ligera desarrollada en Python para la extracci
 Que hace: Extrae texto de PDF a TXT de forma rapida y ordenada.
 Tecnologias: Python 3.14, PyPDF2, Tkinter.
 Creditos: Creado por www.fierroduque.com.
+download .exe: https://lnkd.in/dAtGd62b
 
 
 
@@ -55,6 +56,7 @@ This is a robust and lightweight tool developed in Python for bulk text extracti
 What it does: Extracts text from PDF to TXT quickly and in order.
 Technologies: Python 3.14, PyPDF2, Tkinter.
 Credits: Created by www.fierroduque.com.
+download .exe: https://lnkd.in/dAtGd62b
 
 
 
