@@ -9,8 +9,6 @@ Tecnologias: Python 3.14, PyPDF2, Tkinter.
 Creditos: Creado por www.fierroduque.com.
 download .exe: https://lnkd.in/dAtGd62b
 
-![Texto alternativo](convertidor_pdf_to_text.png)
-
 
 
 
