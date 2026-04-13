@@ -13,7 +13,7 @@ Ha sido evolucionada de una interfaz básica a una experiencia de usuario modern
 Tecnologías: Python 3.12+, Kivy (UI/UX), PyMuPDF (Motor de extracción), python-docx.
 Créditos: Creado por www.fierroduque.com.
 
-Descargar .exe: [Enlace a tu Release]
+Descargar .exe (https://github.com/eduardofierroduque-sudo/CONVERTIDOR_PDF_A_TXT_EFIERRO/releases/tag/v2)
 
 Novedades de la Versión 2.0
 Interfaz Kivy: Motor gráfico de alto rendimiento con soporte para animaciones.
