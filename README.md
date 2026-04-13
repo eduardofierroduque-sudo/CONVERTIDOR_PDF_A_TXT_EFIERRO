@@ -1,5 +1,11 @@
 CONVERTIDOR_PDF_A_TXT_EFIERRO (v2.0 - Neon Edition)
 
+<img width="479" height="888" alt="image" src="https://github.com/user-attachments/assets/e6288c3e-9c5d-46fb-8eac-40aa7a8833b2" />
+<img width="473" height="886" alt="image" src="https://github.com/user-attachments/assets/f9c2f29e-aafa-406e-9eab-f8c109f4b9ed" />
+
+
+
+
 Esta es una herramienta robusta, ligera y de alto impacto visual desarrollada en Python para la extracción avanzada de texto desde archivos PDF.
 Ha sido evolucionada de una interfaz básica a una experiencia de usuario moderna con estética Neon/Cyberpunk y soporte multiplataforma.
 ¿Qué hace?: Convierte documentos PDF a formatos editables (.txt, .md, .docx) manteniendo la integridad del texto.
@@ -55,6 +61,6 @@ python main.py
 
 
 Nota sobre Seguridad en Windows 11
-Si trabajas con Windows 11 y el Smart App Control bloquea las librerías (ImportError: DLL load failed), asegúrate de añadir la carpeta del proyecto a las Exclusiones de tu Antivirus (incluyendo Bitdefender si lo utilizas).
+Si trabajas con Windows 11 y el Smart App Control bloquea las librerías (ImportError: DLL load failed), asegúrate de añadir la carpeta del proyecto a las Exclusiones de tu Antivirus 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
