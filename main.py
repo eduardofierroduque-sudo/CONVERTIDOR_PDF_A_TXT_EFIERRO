@@ -1,89 +1,201 @@
-import PyPDF2
-import tkinter as tk
-from tkinter import filedialog, messagebox, scrolledtext
+import fitz  # PyMuPDF
+import os
+import sys
+import math
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.core.window import Window
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.scrollview import ScrollView 
+from kivy.graphics import Color, Rectangle, Line
+from kivy.uix.image import Image 
+from kivy.clock import Clock 
+from docx import Document
+from tkinter import filedialog 
 
-class ConvertidorPDF:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("CONVERTIDOR_PDF_A_TXT_EFIERRO")
-        self.root.geometry("600x550")
+# --- SOPORTE PARA SPLASH SCREEN NATIVO (PyInstaller) ---
+try:
+    import pyi_splash
+except ImportError:
+    pyi_splash = None
+
+# --- FUNCIÓN CLAVE PARA RUTAS ---
+def resource_path(relative_path):
+    """ Gestiona las rutas de archivos para que funcionen tras la compilación """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+Window.size = (380, 680)
+
+# --- CLASE: BOTÓN VERDE NEÓN ---
+class BotonFluorescente(Button):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background_normal = ''
+        self.background_color = (0, 0, 0, 0)
+        self.color = (0, 0, 0, 1)
+        self.bold = True
+        self.font_size = '18sp'
+        self.t = 0 
+
+        with self.canvas.before:
+            self.glow_color = Color(0.2, 1, 0, 0.4) 
+            self.glow1 = Rectangle(size=(self.width + 15, self.height + 15))
+            self.core_color = Color(0.2, 1, 0, 1)
+            self.rect_core = Rectangle(size=self.size)
+            Color(0, 0, 0, 1) 
+            self.btn_borde = Line(rectangle=(self.x, self.y, self.width, self.height), width=1.5)
+
+        self.bind(pos=self.actualizar_ui, size=self.actualizar_ui)
+        Clock.schedule_interval(self.animar_glow, 0.05)
+
+    def actualizar_ui(self, instance, value):
+        self.rect_core.pos = instance.pos
+        self.rect_core.size = instance.size
+        self.glow1.size = (instance.width + 20, instance.height + 20)
+        self.glow1.pos = (instance.x - 10, instance.y - 10)
+        self.btn_borde.rectangle = (instance.x, instance.y, instance.width, instance.height)
+
+    def animar_glow(self, dt):
+        self.t += 0.15
+        self.glow_color.a = math.sin(self.t) * 0.25 + 0.45
+
+# --- PANTALLA DE INICIO INTERNA (KIVY) ---
+class SplashScreen(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = 'vertical'
+        with self.canvas.before:
+            Color(0, 0, 0, 1)
+            self.rect = Rectangle(size=Window.size, pos=self.pos)
+        self.bind(size=self.actualizar_rect, pos=self.actualizar_rect)
+
+        ruta_logo = resource_path(os.path.join('media', 'logointro_PDF_CONVERTER.png'))
         
-        # Color de fondo principal (Negro)
-        self.root.configure(bg="#000000")
-        
+        if os.path.exists(ruta_logo):
+            self.add_widget(Image(source=ruta_logo, size_hint=(0.7, 0.7), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
+        else:
+            self.add_widget(Label(text="[b]PDF CONVERTER[/b]\n[size=14]fierroduque.com[/size]", markup=True, halign='center'))
+
+    def actualizar_rect(self, *args):
+        self.rect.pos = self.pos
+        self.rect.size = self.size
+
+# --- INTERFAZ PRINCIPAL ---
+class ConvertidorMobile(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dark_mode = True
         self.texto_extraido = ""
+        self.orientation = 'vertical'
+        self.padding = 20
+        self.spacing = 10
+        
+        with self.canvas.before:
+            self.rect_color = Color(0.05, 0.05, 0.05, 1)
+            self.rect = Rectangle(size=Window.size, pos=self.pos)
+        self.bind(size=self.actualizar_rect, pos=self.actualizar_rect)
 
-        # Título
-        self.label = tk.Label(root, text="CONVERTIDOR PDF A TEXTO", 
-                              font=("Arial", 16, "bold"), bg="#000000", fg="#FFFFFF")
-        self.label.pack(pady=15)
+        self.btn_tema = Button(text="MODO CLARO", size_hint=(None, None), size=('120dp', '30dp'), pos_hint={'center_x': 0.5}, background_normal='', background_color=(0.2, 0.2, 0.2, 1), font_size='10sp')
+        self.btn_tema.bind(on_press=self.toggle_tema)
+        self.add_widget(self.btn_tema)
 
-        # Botón Cargar (Verde Neón / Flúor)
-        self.btn_cargar = tk.Button(root, text="1. CARGAR Y EXTRAER PDF", 
-                                   command=self.extraer_texto, 
-                                   bg="#39FF14", fg="#000000", 
-                                   font=("Arial", 10, "bold"), 
-                                   width=30, height=2, activebackground="#2ECC71")
-        self.btn_cargar.pack(pady=10)
+        self.label_titulo = Label(text="[b]PDF[/b] Converter", markup=True, font_size='34sp', size_hint_y=None, height='60dp')
+        self.add_widget(self.label_titulo)
 
-        # Botón Limpiar (Rosa/Magenta Neón)
-        self.btn_limpiar = tk.Button(root, text="2. BORRAR / NUEVA CARGA", 
-                                    command=self.limpiar_datos, 
-                                    bg="#FF007F", fg="#FFFFFF", 
-                                    font=("Arial", 10, "bold"), 
-                                    width=30, height=2, activebackground="#C71585")
-        self.btn_limpiar.pack(pady=10)
+        self.btn_cargar = BotonFluorescente(text="SELECCIONAR ARCHIVO", size_hint_y=None, height='80dp')
+        self.btn_cargar.bind(on_press=self.seleccionar_y_extraer)
+        self.add_widget(self.btn_cargar)
 
-        # Área de visualización (Fondo gris muy oscuro)
-        self.monitor = scrolledtext.ScrolledText(root, width=65, height=15, 
-                                                bg="#1A1A1A", fg="#39FF14", 
-                                                insertbackground="white", font=("Consolas", 10))
-        self.monitor.pack(pady=15)
-        self.monitor.insert(tk.END, "Esperando archivo...")
-        self.monitor.config(state=tk.DISABLED)
+        self.add_widget(Label(text="EXPORTAR A", font_size='11sp', size_hint_y=None, height='20dp', color=(0.5, 0.5, 0.5, 1)))
 
-        # Disclaimer
-        self.disclaimer = tk.Label(root, text="Aplicación creada por www.fierroduque.com", 
-                                  font=("Arial", 9, "italic"), bg="#000000", fg="#555555")
-        self.disclaimer.pack(side=tk.BOTTOM, pady=10)
+        grid = GridLayout(cols=3, spacing=10, size_hint_y=None, height='50dp')
+        btn_style = {'background_normal': '', 'background_color': (0.15, 0.15, 0.15, 1), 'font_size': '12sp', 'bold': True}
+        grid.add_widget(Button(text="TEXT", **btn_style, on_press=lambda x: self.exportar("txt")))
+        grid.add_widget(Button(text="MD", **btn_style, on_press=lambda x: self.exportar("md")))
+        grid.add_widget(Button(text="WORD", **btn_style, on_press=lambda x: self.exportar("docx")))
+        self.add_widget(grid)
 
-    def extraer_texto(self):
-        ruta_archivo = filedialog.askopenfilename(title="Seleccionar PDF", filetypes=[("Archivos PDF", "*.pdf")])
-        if ruta_archivo:
+        self.scroll = ScrollView(size_hint=(1, 1))
+        self.monitor = TextInput(text="Esperando archivo...", readonly=True, background_color=(0, 0, 0, 1), foreground_color=(0.2, 1, 0.2, 1), font_size='12sp', padding=[15, 15], size_hint_y=None)
+        self.monitor.bind(minimum_height=self.monitor.setter('height'))
+        self.scroll.add_widget(self.monitor)
+        self.add_widget(self.scroll)
+
+        self.btn_limpiar = Button(text="BORRAR DATOS", background_normal='', background_color=(0.7, 0, 0.1, 1), size_hint_y=None, height='40dp', bold=True)
+        self.btn_limpiar.bind(on_press=self.limpiar)
+        self.add_widget(self.btn_limpiar)
+
+        self.add_widget(Label(text="fierroduque.com", font_size='10sp', color=(0.3, 0.3, 0.3, 1), size_hint_y=None, height='20dp'))
+
+    def actualizar_rect(self, *args):
+        self.rect.pos = self.pos
+        self.rect.size = self.size
+
+    def toggle_tema(self, instance):
+        if self.dark_mode:
+            self.rect_color.rgb = (0.95, 0.95, 0.95)
+            self.label_titulo.color = (0, 0, 0, 1)
+            self.btn_tema.text = "MODO OSCURO"
+            self.dark_mode = False
+        else:
+            self.rect_color.rgb = (0.05, 0.05, 0.05)
+            self.label_titulo.color = (1, 1, 1, 1)
+            self.btn_tema.text = "MODO CLARO"
+            self.dark_mode = True
+
+    def seleccionar_y_extraer(self, instance):
+        ruta = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+        if ruta:
             try:
-                with open(ruta_archivo, 'rb') as archivo:
-                    lector = PyPDF2.PdfReader(archivo)
-                    contenido = ""
-                    for i in range(len(lector.pages)):
-                        contenido += f"--- PÁGINA {i+1} ---\n"
-                        contenido += lector.pages[i].extract_text() + "\n\n"
-                
-                self.texto_extraido = contenido
-                self.monitor.config(state=tk.NORMAL)
-                self.monitor.delete(1.0, tk.END)
-                self.monitor.insert(tk.END, self.texto_extraido)
-                self.monitor.config(state=tk.DISABLED)
-                self.guardar_txt()
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo leer el PDF: {e}")
+                doc = fitz.open(ruta)
+                texto = "".join([p.get_text() for p in doc])
+                self.texto_extraido = texto
+                self.monitor.text = texto
+                self.scroll.scroll_y = 1
+            except Exception as e: self.monitor.text = f"Error: {e}"
 
-    def guardar_txt(self):
+    def exportar(self, fmt):
         if not self.texto_extraido: return
-        ruta_guardado = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Archivo de texto", "*.txt")])
-        if ruta_guardado:
-            with open(ruta_guardado, 'w', encoding='utf-8') as f:
-                f.write(self.texto_extraido)
-            messagebox.showinfo("Éxito", "Archivo .txt generado correctamente.")
+        ruta = filedialog.asksaveasfilename(defaultextension=f".{fmt}")
+        if ruta:
+            if fmt == "docx":
+                d = Document(); d.add_paragraph(self.texto_extraido); d.save(ruta)
+            else:
+                with open(ruta, 'w', encoding='utf-8') as f: f.write(self.texto_extraido)
 
-    def limpiar_datos(self):
-        self.texto_extraido = ""
-        self.monitor.config(state=tk.NORMAL)
-        self.monitor.delete(1.0, tk.END)
-        self.monitor.insert(tk.END, "Esperando archivo...")
-        self.monitor.config(state=tk.DISABLED)
-        messagebox.showinfo("Limpieza", "Datos borrados. Listo para cargar otro PDF.")
+    def limpiar(self, instance):
+        self.texto_extraido = ""; self.monitor.text = "Esperando archivo..."
+
+# --- APLICACIÓN ---
+class MainApp(App):
+    def build(self):
+        self.title = "PDF Converter - fierroduque.com"
+        self.root = BoxLayout(orientation='vertical')
+        
+        # Primero mostramos el splash interno de Kivy
+        self.splash = SplashScreen()
+        self.root.add_widget(self.splash)
+        
+        # Programamos el cambio a la app principal
+        Clock.schedule_once(self.mostrar_app, 3)
+        return self.root
+
+    def mostrar_app(self, dt):
+        # 1. Limpiamos el splash interno
+        self.root.clear_widgets()
+        # 2. Cargamos la interfaz principal
+        self.root.add_widget(ConvertidorMobile())
+        
+        # 3. CERRAMOS EL SPLASH NATIVO DE WINDOWS (si existe)
+        if pyi_splash:
+            pyi_splash.close()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = ConvertidorPDF(root)
-    root.mainloop()
+    MainApp().run()
