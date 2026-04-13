@@ -53,3 +53,8 @@ pip install -r requirements.txt
 Ejecutar:
 python main.py
 
+
+Nota sobre Seguridad en Windows 11
+Si trabajas con Windows 11 y el Smart App Control bloquea las librerías (ImportError: DLL load failed), asegúrate de añadir la carpeta del proyecto a las Exclusiones de tu Antivirus (incluyendo Bitdefender si lo utilizas).
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
