@@ -1,0 +1,5 @@
+kivy[base]
+pymupdf
+python-docx
+lxml
+pyinstaller

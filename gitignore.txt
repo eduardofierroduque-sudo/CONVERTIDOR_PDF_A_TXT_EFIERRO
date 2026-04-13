@@ -1,0 +1,14 @@
+# Entornos virtuales
+venv/
+ENV/
+env/
+
+# Carpetas de PyInstaller y compilación
+build/
+dist/
+__pycache__/
+*.spec
+
+# Archivos de sistema
+Thumbs.db
+desktop.ini
